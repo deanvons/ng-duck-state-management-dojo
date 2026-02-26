@@ -25,5 +25,5 @@ export class DuckDetailsComponent implements OnInit{
     this.duck = this._duckService.getDuck()
   }
 
-   // this component doesn't know when to reload the rendered duck object
+   // this component doesn't know when to reload the rendered duck object, it doesnt get notified about changes
 }
