@@ -53,6 +53,18 @@ UI reflects latest state
 
 This is NOT true reactive state.
 
+Also it means that getters are constantly being called even if the state hasn't changed, but because some other event triggered change detection-
+
+Click anywhere
+   ↓
+Angular checks AppComponent
+   ↓
+Angular checks DuckPreviewComponent → getter runs (even if the getter gets a state which didn't change - DIRTY CHECKING) 
+   ↓
+Angular checks DuckDetailsComponent → getter runs (even if the getter gets a state which didn't change - DIRTY CHECKING)  
+   ↓
+Angular checks all other components
+
 Reactive state (pub/sub or BehaviorSubject and Signals) uses PUSH:
 the state system NOTIFIES components when state changes.
 
