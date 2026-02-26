@@ -1,29 +1,29 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { DuckService } from '../../services/duck.service';
 import { Duck } from '../../models/Duck';
 
 @Component({
   selector: 'app-duck-details',
-  imports: [],
   templateUrl: './duck-details.component.html',
   styleUrl: './duck-details.component.css'
 })
-export class DuckDetailsComponent implements OnInit{
+export class DuckDetailsComponent {
 
-  // DI needs this to be private
   private _duckService: DuckService;
-
-  // So we need a public duck to expose to the template
-  public duck:Duck|undefined
 
   constructor(duckService: DuckService) {
     this._duckService = duckService;
   }
 
-  ngOnInit(): void {
-    // Extract the duck state from the service
-    this.duck = this._duckService.getDuck()
+  // This getter is NOT notified when state changes.
+  //
+  // Instead, Angular calls it again during change detection.
+  //
+  // This creates the illusion of reactive state,
+  // but Angular is simply re-reading the value.
+  //
+  // This is PULL, not PUSH.
+  get duck(): Duck {
+    return this._duckService.Duck;
   }
-
-   // this component doesn't know when to reload the rendered duck object, it doesnt get notified about changes
 }

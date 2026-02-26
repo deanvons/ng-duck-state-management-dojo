@@ -1,34 +1,42 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { DuckService } from '../../services/duck.service';
 import { Duck } from '../../models/Duck';
 
 @Component({
   selector: 'app-duck-preview',
-  imports: [],
   templateUrl: './duck-preview.component.html',
   styleUrl: './duck-preview.component.css',
 })
-export class DuckPreviewComponent implements OnInit{
-  // DI needs this to be private
-  private _duckService: DuckService;
+export class DuckPreviewComponent {
 
-  // So we need a public duck to expose to the template
-  public duck:Duck|undefined
+  private _duckService: DuckService;
 
   constructor(duckService: DuckService) {
     this._duckService = duckService;
   }
 
-  ngOnInit(): void {
-    // Extract the duck state from the service
-    this.duck = this._duckService.getDuck()
+  // This getter creates a LIVE VIEW into the service state.
+  //
+  // Angular calls this getter every change detection cycle.
+  //
+  // This is PULL-BASED state access:
+  // Angular pulls the latest value when rendering.
+  //
+  // This is why the UI updates, even though no notification exists.
+  get duck(): Duck {
+    return this._duckService.Duck;
   }
 
-  public updateNickName(){
-    this._duckService.setDuck({...this.duck!,nickName:"Sergeant Honk"})
+  public updateNickName() {
 
-    // now we have to reload the rendered duck object
-    this.duck = this._duckService.getDuck()
+    // This updates the service state.
+    // No components are notified directly.
+    //
+    // However, Angular change detection runs because this was triggered
+    // by a click event, and Angular re-pulls state via the getter.
+    this._duckService.Duck = {
+      ...this.duck,
+      nickName: "Sergeant Honk"
+    };
   }
-  
 }
