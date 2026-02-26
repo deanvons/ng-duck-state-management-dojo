@@ -32,3 +32,32 @@ export class DuckService {
     alert("Duck updated");
   }
 }
+
+/*
+STATE MANAGEMENT MODEL SUMMARY
+
+This implementation uses PULL-BASED state access.
+
+Components are NOT notified when state changes.
+Instead, Angular re-reads state during change detection.
+
+Flow:
+
+Component updates state 
+          ↓
+Angular change detection runs
+          ↓
+Angular calls getters again
+          ↓
+UI reflects latest state
+
+This is NOT true reactive state.
+
+Reactive state (BehaviorSubject, Signals) uses PUSH:
+the state system NOTIFIES components when state changes.
+
+Pull = Angular asks "has anything changed?"
+Push = State says "something changed."
+
+Signals and BehaviorSubject implement PUSH.
+*/
