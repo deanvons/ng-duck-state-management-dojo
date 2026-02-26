@@ -1,43 +1,67 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DuckService } from '../../services/duck.service';
 import { Duck } from '../../models/Duck';
+
+/*
+This component now SUBSCRIBES to state changes.
+
+It no longer relies on Angular pulling state.
+
+Instead, the store PUSHES updates into this component.
+*/
 
 @Component({
   selector: 'app-duck-preview',
   templateUrl: './duck-preview.component.html',
   styleUrl: './duck-preview.component.css',
 })
-export class DuckPreviewComponent {
+export class DuckPreviewComponent implements OnInit, OnDestroy {
 
-  private _duckService: DuckService;
+  duck!: Duck;
 
-  constructor(duckService: DuckService) {
-    this._duckService = duckService;
+  private unsubscribe!: () => void;
+
+  constructor(private duckService: DuckService) {}
+
+
+  /*
+  Subscribe when component starts.
+
+  Now state updates arrive immediately when store changes.
+  */
+  ngOnInit(): void {
+
+    this.unsubscribe = this.duckService.subscribe(duck => {
+
+      // This runs ONLY when state changes
+
+      this.duck = duck;
+
+      console.log("PreviewComponent received PUSH update");
+    });
   }
 
-  // This getter creates a LIVE VIEW into the service state.
-  //
-  // Angular calls this getter every change detection cycle.
-  //
-  // This is PULL-BASED state access:
-  // Angular pulls the latest value when rendering.
-  //
-  // This is why the UI updates, even though no notification exists.
-  get duck(): Duck {
-    return this._duckService.Duck;
+
+  /*
+  Clean up subscription to prevent memory leaks.
+
+  This is required in pub/sub and BehaviorSubject systems.
+  */
+  ngOnDestroy(): void {
+    this.unsubscribe();
   }
 
-  public updateNickName() {
 
-    // This updates the service state.
-    // No components are notified directly.
-    //
-    // However, Angular change detection runs because this was triggered
-    // by a click event, and Angular re-pulls state via the getter.
-    this._duckService.Duck = {
+  /*
+  Update state through store.
+
+  Store will notify all subscribers.
+  */
+  updateNickName(): void {
+
+    this.duckService.Duck = {
       ...this.duck,
       nickName: "Sergeant Honk"
     };
   }
 }
-
