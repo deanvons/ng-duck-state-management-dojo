@@ -53,7 +53,7 @@ UI reflects latest state
 
 This is NOT true reactive state.
 
-Reactive state (BehaviorSubject, Signals) uses PUSH:
+Reactive state (pub/sub or BehaviorSubject and Signals) uses PUSH:
 the state system NOTIFIES components when state changes.
 
 Pull = Angular asks "has anything changed?"
