@@ -81,6 +81,8 @@ export class DuckService {
   set Duck(value: Duck) {
 
     this._duck = value;
+    
+    alert("Duck updated");
 
     // Notify all subscribers immediately
     this.notifySubscribers();
