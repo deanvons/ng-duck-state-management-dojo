@@ -14,7 +14,7 @@ previously, components had to PULL state during change detection.
 
 Now the store PUSHES notifications.
 
-This is conceptually identical to:
+This is conceptually identical to where we will end up later:
 
 BehaviorSubject → next()
 Signals → signal.set() / update()
