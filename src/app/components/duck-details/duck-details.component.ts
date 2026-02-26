@@ -24,4 +24,6 @@ export class DuckDetailsComponent implements OnInit{
     // Extract the duck state from the service
     this.duck = this._duckService.getDuck()
   }
+
+   // this component doesn't know when to reload the rendered duck object
 }

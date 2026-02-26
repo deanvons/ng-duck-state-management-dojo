@@ -26,6 +26,9 @@ export class DuckPreviewComponent implements OnInit{
 
   public updateNickName(){
     this._duckService.setDuck({...this.duck!,nickName:"Sergeant Honk"})
+
+    // now we have to reload the rendered duck object
+    this.duck = this._duckService.getDuck()
   }
   
 }
