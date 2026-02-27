@@ -38,12 +38,4 @@ export class DuckService {
     (no .next/.error/.complete available on the returned type)
   */
   public readonly duck$: Observable<Duck> = this.duckSubject.asObservable();
-
-  /*
-  Optional snapshot getter (handy in event handlers).
-  Not required, but often useful.
-  */
-  get Duck(): Duck {
-    return this.duckSubject.value;
-  }
 }
