@@ -7,17 +7,15 @@ import { DuckService } from '../../services/duck.service';
   styleUrl: './duck-preview.component.css',
 })
 export class DuckPreviewComponent {
-  constructor(public duckService: DuckService) {}
+  readonly duck;
+  private duckService;
+
+  constructor(duckService: DuckService) {
+    this.duckService = duckService;
+    this.duck = this.duckService.duck; // signal exposed to template
+  }
 
   updateNickName(): void {
-    alert('Duck updated');
-
-    // Similar to BehaviorSubject.value + next(...)
-    // Read current: duck()
-    // Write next:   duck.update(...)
-    this.duckService.duck.update(d => ({
-      ...d,
-      nickName: 'Sergeant Honk',
-    }));
+    this.duckService.updateNickName('Sergeant Honk');
   }
 }

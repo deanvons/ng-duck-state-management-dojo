@@ -8,14 +8,14 @@ import { AsyncPipe, CommonModule } from '@angular/common';
   selector: 'app-duck-details',
   templateUrl: './duck-details.component.html',
   styleUrl: './duck-details.component.css',
-  imports: [CommonModule]
-
+  imports: [CommonModule],
 })
 export class DuckDetailsComponent {
-  
+  readonly duck;
+  private duckService;
 
-
-constructor(public duckService: DuckService) {
-  
-}
+  constructor(duckService: DuckService) {
+    this.duckService = duckService;
+    this.duck = this.duckService.duck; // signal exposed to template
+  }
 }
