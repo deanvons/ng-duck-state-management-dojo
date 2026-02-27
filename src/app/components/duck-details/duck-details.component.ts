@@ -8,15 +8,14 @@ import { AsyncPipe, CommonModule } from '@angular/common';
   selector: 'app-duck-details',
   templateUrl: './duck-details.component.html',
   styleUrl: './duck-details.component.css',
-  imports: [CommonModule,AsyncPipe]
+  imports: [CommonModule]
 
 })
 export class DuckDetailsComponent {
   
 
-duck$!: Observable<Duck>;
 
-constructor(private duckService: DuckService) {
-  this.duck$ = this.duckService.duck$;
+constructor(public duckService: DuckService) {
+  
 }
 }
