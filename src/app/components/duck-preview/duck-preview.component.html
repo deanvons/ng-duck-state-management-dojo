@@ -2,18 +2,17 @@
   <div class="w-40 h-40 bg-white rounded-xl shadow-md border border-gray-200 relative p-3">
 
     <!-- async pipe unwraps the latest Duck value -->
-    <ng-container *ngIf="duck$ | async as duck">
+    
       <p class="text-lg font-semibold text-gray-800">
-        {{ duck.nickName }}
+       {{ (duck$ | async)?.nickName }}
       </p>
 
       <button
         class="absolute bottom-2 right-2 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition"
-        (click)="updateNickName(duck)"
+        (click)="updateNickName()"
       >
         Update Nick Name
       </button>
-    </ng-container>
 
   </div>
 </div>
