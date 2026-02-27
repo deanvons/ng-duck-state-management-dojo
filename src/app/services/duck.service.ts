@@ -1,25 +1,21 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Duck } from '../models/Duck';
 
 /*
-PUB/SUB STATE STORE (NO RXJS, NO SIGNALS)
+BEHAVIORSUBJECT STATE STORE (RXJS)
 
-This service now implements TRUE PUSH-BASED STATE.
+BehaviorSubject is an Observer Pattern implementation provided by RxJS.
 
-Key idea:
-When state changes, subscribers are NOTIFIED explicitly.
+Key properties of BehaviorSubject:
+- It stores the *current value* (state).
+- It emits the current value immediately to any new subscriber.
+- It notifies all subscribers when you call next(newValue).
 
-This solves the core flaw of naive get/set:
-previously, components had to PULL state during change detection.
-
-Now the store PUSHES notifications.
-
-This is conceptually identical to where we will end up later:
-
-BehaviorSubject → next()
-Signals → signal.set() / update()
-
-but implemented manually.
+This maps directly to your manual observer store:
+- _subscribers[]      → internal subscriber list (managed by RxJS)
+- notifySubscribers() → next(newValue)
+- _duck               → current value stored in the BehaviorSubject
 */
 
 @Injectable({
@@ -27,187 +23,83 @@ but implemented manually.
 })
 export class DuckService {
 
-  // -----------------------------
-  // INTERNAL STATE STORAGE
-  // -----------------------------
+  /*
+  Private subject (implementation detail).
 
-  private _duck: Duck = {
+  We keep the BehaviorSubject private to prevent other code from calling:
+      this._duckSubject.next(...)
+  from outside the service.
+
+  That keeps writes centralized and predictable.
+  */
+  private readonly _duckSubject = new BehaviorSubject<Duck>({
     nickName: 'Sir Honk',
     age: 3,
     weight: 5.3,
-  };
+  });
 
   /*
-  Subscribers are functions that will be called when state changes.
+  Public observable stream.
 
-  Each subscriber is responsible for updating its own component state.
+  The `$` suffix is a common Angular/RxJS convention meaning:
+      "this is a stream (Observable), not a plain value"
 
-  This is the core of pub/sub:
-  - publisher = this service
-  - subscribers = components
+  duck$ will emit a Duck immediately on subscribe,
+  and then emit again whenever the state changes.
   */
-  private _subscribers: Array<(duck: Duck) => void> = [];
-
-
-  // -----------------------------
-  // PUBLIC STATE ACCESS (READ)
-  // -----------------------------
+  public readonly duck$: Observable<Duck> = this._duckSubject.asObservable();
 
   /*
-  Getter allows synchronous access to current state.
+  Synchronous read of the current state.
 
-  This is still useful for initial load and direct reads.
+  BehaviorSubject keeps the current value available via `.value`.
 
-  IMPORTANT:
-  This getter DOES NOT create reactivity by itself.
-  Reactivity comes from subscription notifications.
+  Useful for:
+  - event handlers where you want a snapshot
+  - building the next state: { ...this.Duck, nickName: 'x' }
+
+  NOTE:
+  Reading `.value` does not create reactivity.
+  Reactivity comes from subscribing to duck$ (or async pipe).
   */
   get Duck(): Duck {
-    return this._duck;
+    return this._duckSubject.value;
   }
 
-
-  // -----------------------------
-  // PUBLIC STATE ACCESS (WRITE)
-  // -----------------------------
-
   /*
-  Setter updates state AND notifies all subscribers.
+  State update entry point.
 
-  This is the key difference from naive get/set.
+  next(value) does two things:
+  1) updates the current value
+  2) notifies all subscribers (PUSH)
 
-  Now the store PUSHES updates.
+  This is the BehaviorSubject equivalent of your notifySubscribers().
   */
   set Duck(value: Duck) {
-
-    this._duck = value;
-    
-    alert("Duck updated");
-
-    // Notify all subscribers immediately
-    this.notifySubscribers();
-  }
-
-
-  // -----------------------------
-  // SUBSCRIPTION MANAGEMENT
-  // -----------------------------
-
-  /*
-  subscribe()
-
-  Registers a subscriber callback.
-
-  Returns an unsubscribe function.
-
-  This mirrors BehaviorSubject.subscribe().
-  */
-  subscribe(callback: (duck: Duck) => void): () => void {
-
-    this._subscribers.push(callback);
-
-    // Immediately emit current state
-    // This ensures subscriber starts in sync
-    callback(this._duck);
-
-    // Return unsubscribe function
-    return () => {
-      this._subscribers = this._subscribers.filter(s => s !== callback);
-    };
-  }
-
-
-  // -----------------------------
-  // INTERNAL NOTIFICATION SYSTEM
-  // -----------------------------
-
-  /*
-  notifySubscribers()
-
-  PUSHES state to all listeners.
-
-  This is the core reactive mechanism.
-  */
-  private notifySubscribers(): void {
-
-    for (const subscriber of this._subscribers) {
-      subscriber(this._duck);
-    }
+    alert('Duck updated');
+    this._duckSubject.next(value);
   }
 }
 
 /*
-===============================================================================
-OBSERVER PATTERN STATE STORE — SUMMARY
-===============================================================================
+WHEN TO USE asObservable()
 
-This service implements the Observer Pattern manually.
+BehaviorSubject is BOTH:
+- an Observable (you can subscribe to it)
+- an Observer (it has next/error/complete)
 
-Flow:
+If you expose the BehaviorSubject directly, other code could do:
+    duckSubject.next(...)
 
-1. Components subscribe:
-       this.unsubscribe = duckService.subscribe(callback)
+That breaks encapsulation (anyone can mutate your state).
 
-2. Store updates state:
-       duckService.Duck = newValue
+So we usually:
+- keep the BehaviorSubject private
+- expose ONLY an Observable via asObservable()
 
-3. Store notifies observers:
-       notifySubscribers()
-
-4. Components receive PUSH updates automatically.
-
-
-This is TRUE reactive state.
-
-The store PUSHES updates.
-Components do NOT need to poll or re-read state.
-
-
-===============================================================================
-WHY unsubscribe() IS REQUIRED
-===============================================================================
-
-subscribe() returns an unsubscribe function:
-
-       const unsubscribe = subscribe(callback)
-
-Calling unsubscribe():
-
-       unsubscribe()
-
-removes the observer from the store.
-
-This prevents memory leaks when components are destroyed.
-
-Angular lifecycle:
-
-       ngOnInit()    → subscribe
-       ngOnDestroy() → unsubscribe
-
-
-===============================================================================
-LIMITATION OF MANUAL OBSERVER IMPLEMENTATION
-===============================================================================
-
-This implementation works, but requires manual management:
-
-• manual subscriber storage
-• manual notifications
-• manual unsubscribe lifecycle
-
-
-===============================================================================
-NEXT STEP: BEHAVIORSUBJECT
-===============================================================================
-
-BehaviorSubject is a built-in Observer Pattern implementation.
-
-It replaces manual subscriber management with:
-
-       subject.subscribe(callback)
-       subject.next(newState)
-       subscription.unsubscribe()
-
-Same pattern — cleaner, safer, idiomatic Angular.
-===============================================================================
+Rule of thumb:
+- Use asObservable() when you want READ-ONLY access for consumers.
+- Keep next() calls inside the store/service only.
+- Use duck$ | async for UI so Angular manages subscriptions. 
+- Use the getter (snapshot) and store methods/setters for imperative interactions like click handlers.
 */

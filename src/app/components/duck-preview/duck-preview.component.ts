@@ -1,67 +1,43 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
 import { DuckService } from '../../services/duck.service';
 import { Duck } from '../../models/Duck';
+import { AsyncPipe, CommonModule } from '@angular/common';
 
 /*
-This component now SUBSCRIBES to state changes.
+COMPONENT USING ASYNC PIPE
 
-It no longer relies on Angular pulling state.
+Instead of manually subscribing, we expose an Observable to the template
+and let Angular manage subscription lifecycle.
 
-Instead, the store PUSHES updates into this component.
+The async pipe:
+- subscribes automatically when the component renders
+- updates the template when new values arrive
+- unsubscribes automatically when the component is destroyed
 */
 
 @Component({
   selector: 'app-duck-preview',
   templateUrl: './duck-preview.component.html',
   styleUrl: './duck-preview.component.css',
+  imports: [CommonModule,AsyncPipe]
 })
-export class DuckPreviewComponent implements OnInit, OnDestroy {
-
-  duck!: Duck;
-
-  private unsubscribe!: () => void;
-
-  constructor(private duckService: DuckService) {}
-
+export class DuckPreviewComponent {
 
   /*
-  Subscribe when component starts.
-
-  Now state updates arrive immediately when store changes.
+  `$` suffix: stream of Duck values.
+  Template will use: duck$ | async
   */
-  ngOnInit(): void {
+ duck$!: Observable<Duck>;
 
-    this.unsubscribe = this.duckService.subscribe(duck => {
+constructor(private duckService: DuckService) {
+  this.duck$ = this.duckService.duck$;
+}
 
-      // This runs ONLY when state changes
-
-      this.duck = duck;
-
-      console.log("PreviewComponent received PUSH update");
-    });
-  }
-
-
-  /*
-  Clean up subscription to prevent memory leaks.
-
-  This is required in pub/sub and BehaviorSubject systems.
-  */
-  ngOnDestroy(): void {
-    this.unsubscribe();
-  }
-
-
-  /*
-  Update state through store.
-
-  Store will notify all subscribers.
-  */
-  updateNickName(): void {
-
+  updateNickName(currentDuck: Duck): void {
     this.duckService.Duck = {
-      ...this.duck,
-      nickName: "Sergeant Honk"
+      ...currentDuck,
+      nickName: 'Sergeant Honk'
     };
   }
 }
